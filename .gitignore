@@ -12,7 +12,15 @@ dist
 dist-ssr
 *.local
 
-# Rust / Tauri
+# Rust / Cargo
+target
+debug
+**/*.rs.bk
+*.pdb
+**/mutants.out*/
+rustc-ice-*.txt
+
+# Tauri
 src-tauri/target
 src-tauri/gen/schemas
 
