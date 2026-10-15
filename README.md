@@ -6,6 +6,9 @@ thumbnails rendered on the fly, with a full interactive viewer for each model.
 
 Built with **Tauri 2** (Rust backend) + **React** + **three.js**.
 
+<img width="1287" height="853" alt="2026-10-14 22_12_47-3DBrowser" src="https://github.com/user-attachments/assets/51c1aebe-4aea-49c9-8e32-bc02d8f31bf1" />
+
+
 ## Features
 
 - Folder tree sidebar + breadcrumb navigation over the native filesystem.
