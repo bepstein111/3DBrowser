@@ -62,6 +62,14 @@ export async function createFolder(parent: string, name: string): Promise<string
   return body.path;
 }
 
+export async function deleteEntry(path: string): Promise<void> {
+  await requestJson<{ ok: boolean }>("/api/delete", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ path }),
+  });
+}
+
 export function readThumbnail(
   _entry: DirEntry,
   _version: number,

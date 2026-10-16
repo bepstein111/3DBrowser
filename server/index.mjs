@@ -151,6 +151,16 @@ async function copyEntries(paths, destDir) {
   return created;
 }
 
+async function deleteEntry(target) {
+  const real = toReal(target);
+  if (real === ROOT) {
+    throw new HttpError(400, "Cannot delete the root folder");
+  }
+  const stat = await fsp.stat(real).catch(() => null);
+  if (!stat) throw new HttpError(404, "Path does not exist");
+  await fsp.rm(real, { recursive: true, force: true });
+}
+
 async function createFolder(parent, name) {
   const parentReal = toReal(parent);
   const parentStat = await fsp.stat(parentReal).catch(() => null);
@@ -246,6 +256,12 @@ async function handle(req, res) {
     const body = await readJsonBody(req);
     const result = await createFolder(String(body.parent), String(body.name ?? ""));
     return sendJson(res, 200, { path: result });
+  }
+
+  if (route === "/api/delete" && req.method === "POST") {
+    const body = await readJsonBody(req);
+    await deleteEntry(String(body.path));
+    return sendJson(res, 200, { ok: true });
   }
 
   throw new HttpError(404, "Not found");

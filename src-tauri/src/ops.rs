@@ -103,6 +103,16 @@ pub fn move_entry(source: String, dest_dir: String) -> Result<String, String> {
     }
 }
 
+/// Permanently deletes a file or folder (recursively for folders).
+#[tauri::command]
+pub fn delete_entry(path: String) -> Result<(), String> {
+    let target = PathBuf::from(&path);
+    if !target.exists() {
+        return Err(format!("Path does not exist: {}", target.display()));
+    }
+    remove_recursive(&target)
+}
+
 /// Creates a new folder inside `parent`, returning the created path.
 #[tauri::command]
 pub fn create_folder(parent: String, name: String) -> Result<String, String> {
@@ -231,6 +241,25 @@ mod tests {
         assert_eq!(created.len(), 1);
         assert!(src.exists(), "source is kept after copy");
         assert!(dest.join("thing").join("b.stl").exists());
+
+        fs::remove_dir_all(&root).ok();
+    }
+
+    #[test]
+    fn delete_removes_files_and_folders() {
+        let root = temp_dir("delete");
+        let file = root.join("a.stl");
+        fs::write(&file, b"mesh").unwrap();
+        delete_entry(file.to_string_lossy().into()).unwrap();
+        assert!(!file.exists());
+
+        let folder = root.join("things");
+        fs::create_dir(&folder).unwrap();
+        fs::write(folder.join("b.stl"), b"mesh").unwrap();
+        delete_entry(folder.to_string_lossy().into()).unwrap();
+        assert!(!folder.exists());
+
+        assert!(delete_entry(root.join("missing").to_string_lossy().into()).is_err());
 
         fs::remove_dir_all(&root).ok();
     }

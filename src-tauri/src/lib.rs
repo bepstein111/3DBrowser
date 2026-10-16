@@ -16,6 +16,7 @@ pub fn run() {
             ops::move_entry,
             ops::copy_entries,
             ops::create_folder,
+            ops::delete_entry,
             bookmarks::load_bookmarks,
             bookmarks::save_bookmarks,
             thumbs::read_thumbnail,
