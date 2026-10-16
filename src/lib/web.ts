@@ -1,4 +1,6 @@
-import type { DirEntry, DirListing } from "./tauri";
+import type { Bookmark, DirEntry, DirListing } from "./tauri";
+
+const BOOKMARKS_KEY = "3dbrowser.bookmarks";
 
 async function requestJson<T>(url: string, init?: RequestInit): Promise<T> {
   const response = await fetch(url, init);
@@ -67,5 +69,23 @@ export function writeThumbnail(
 }
 
 export function clearThumbnailCache(): Promise<void> {
+  return Promise.resolve();
+}
+
+export function loadBookmarks(): Promise<Bookmark[]> {
+  try {
+    const raw = window.localStorage.getItem(BOOKMARKS_KEY);
+    return Promise.resolve(raw ? (JSON.parse(raw) as Bookmark[]) : []);
+  } catch {
+    return Promise.resolve([]);
+  }
+}
+
+export function saveBookmarks(bookmarks: Bookmark[]): Promise<void> {
+  try {
+    window.localStorage.setItem(BOOKMARKS_KEY, JSON.stringify(bookmarks));
+  } catch {
+    // ignore quota / private-mode errors
+  }
   return Promise.resolve();
 }

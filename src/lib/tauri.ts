@@ -80,3 +80,18 @@ export function moveEntry(source: string, destDir: string): Promise<string> {
 export function copyEntries(paths: string[], destDir: string): Promise<string[]> {
   return invoke<string[]>("copy_entries", { paths, destDir });
 }
+
+export interface Bookmark {
+  id: string;
+  name: string;
+  path: string;
+  createdAt: number;
+}
+
+export function loadBookmarks(): Promise<Bookmark[]> {
+  return invoke<Bookmark[]>("load_bookmarks");
+}
+
+export function saveBookmarks(bookmarks: Bookmark[]): Promise<void> {
+  return invoke<void>("save_bookmarks", { bookmarks });
+}

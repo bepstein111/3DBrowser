@@ -1,5 +1,7 @@
 import type { DirListing } from "../lib/api";
 import { isWebMode } from "../lib/api";
+import { useBookmarks } from "../state/BookmarksContext";
+import { pathsEqual } from "../lib/paths";
 
 interface Props {
   listing: DirListing | null;
@@ -25,6 +27,10 @@ export default function Toolbar({
   onTileSize,
 }: Props) {
   const segments = listing ? splitPath(listing.path) : [];
+  const { bookmarks, toggleBookmark } = useBookmarks();
+  const bookmarked = listing
+    ? bookmarks.some((bookmark) => pathsEqual(bookmark.path, listing.path))
+    : false;
 
   return (
     <header className="toolbar">
@@ -45,6 +51,15 @@ export default function Toolbar({
         </button>
         <button type="button" className="btn" onClick={onRefresh} title="Reload and clear cache">
           ⟳ Refresh
+        </button>
+        <button
+          type="button"
+          className={`btn bookmark-btn${bookmarked ? " is-active" : ""}`}
+          onClick={() => listing && toggleBookmark(listing.path)}
+          disabled={!listing}
+          title={bookmarked ? "Remove bookmark" : "Bookmark this folder"}
+        >
+          {bookmarked ? "★" : "☆"}
         </button>
 
         <nav className="breadcrumbs" aria-label="Breadcrumb">

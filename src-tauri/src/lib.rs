@@ -1,3 +1,4 @@
+mod bookmarks;
 mod fs;
 mod ops;
 mod thumbs;
@@ -14,6 +15,8 @@ pub fn run() {
             fs::home_dir,
             ops::move_entry,
             ops::copy_entries,
+            bookmarks::load_bookmarks,
+            bookmarks::save_bookmarks,
             thumbs::read_thumbnail,
             thumbs::write_thumbnail,
             thumbs::clear_thumbnail_cache,

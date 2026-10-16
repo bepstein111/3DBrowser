@@ -11,11 +11,12 @@ Built with **Tauri 2** (Rust backend) + **React** + **three.js**.
 
 ## Features
 
-- Folder tree sidebar + breadcrumb navigation over the native filesystem.
+- Bookmark sidebar: save folders, rename them, drag to reorder, and click to
+  jump straight there. Bookmarked folders show a filled star.
 - Large thumbnail grid; thumbnails are rendered in the background and cached to
   disk (keyed by path + modified time + size), so they appear instantly next time.
 - Full-size viewer with orbit controls, wireframe toggle and a reset view.
-- Drag a tile onto a folder (or tree node / breadcrumb) to move it, or drag it
+- Drag a tile onto a folder (or breadcrumb) to move it, or drag it
   out of the window into a slicer or any other application. Files dropped onto
   the app from Explorer/Finder are copied into the folder being viewed.
 - Supported formats out of the box: **STL, OBJ, 3MF, STEP/STP, IGES/IGS**.
@@ -99,14 +100,16 @@ existing caches.
 
 - `src-tauri/src/fs.rs` – filesystem listing and raw file reads.
 - `src-tauri/src/ops.rs` – move/copy operations backing drag and drop.
+- `src-tauri/src/bookmarks.rs` – bookmark persistence (JSON in the app data dir).
 - `src-tauri/src/thumbs.rs` – on-disk thumbnail cache.
 - `src/formats/` – format registry and loaders (the extension point).
 - `src/three/` – shared scene helpers, offscreen thumbnail renderer, viewer.
 - `src/lib/api.ts` – picks the desktop (Tauri) or web (HTTP) backend at runtime.
 - `src/lib/dragdrop.ts` – native drag-out, drop-target hit-testing.
+- `src/state/BookmarksContext.tsx` – bookmark state, persisted per backend.
 - `server/index.mjs` – zero-dependency HTTP file API for browser mode.
 - `docker/` – Caddy config and the web/api Dockerfiles.
-- `src/components/` – explorer UI (toolbar, tree, grid, viewer modal).
+- `src/components/` – explorer UI (toolbar, bookmarks panel, grid, viewer modal).
 
 Drag and drop uses a single native drag gesture (via `@crabnebula/tauri-plugin-drag`).
 Dropping over the window is handled by Tauri's drag-drop event, whose cursor

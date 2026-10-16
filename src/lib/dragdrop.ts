@@ -1,5 +1,6 @@
 import { startDrag } from "@crabnebula/tauri-plugin-drag";
 import type { DirEntry } from "./api";
+import { pathsEqual } from "./paths";
 
 /** dataTransfer type used for in-app drags in browser (non-Tauri) mode. */
 export const INTERNAL_DRAG_TYPE = "application/x-3dbrowser-entry";
@@ -8,13 +9,7 @@ export const INTERNAL_DRAG_TYPE = "application/x-3dbrowser-entry";
 let internalDragPath: string | null = null;
 let clearTimer: number | undefined;
 
-function normalise(path: string): string {
-  return path.replace(/\//g, "\\").replace(/\\+$/, "").toLowerCase();
-}
-
-export function samePath(a: string, b: string): boolean {
-  return normalise(a) === normalise(b);
-}
+export const samePath = pathsEqual;
 
 export function isInternalDrag(path: string): boolean {
   return internalDragPath !== null && samePath(path, internalDragPath);
