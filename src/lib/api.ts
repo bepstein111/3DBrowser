@@ -1,8 +1,8 @@
 import * as tauri from "./tauri";
 import * as web from "./web";
-import type { DirEntry, DirListing } from "./tauri";
+import type { Bookmark, DirEntry, DirListing } from "./tauri";
 
-export type { DirEntry, DirListing };
+export type { Bookmark, DirEntry, DirListing };
 
 /**
  * True when the UI runs in a plain browser (served by Caddy in the Docker
@@ -52,4 +52,12 @@ export function writeThumbnail(
 
 export function clearThumbnailCache(): Promise<void> {
   return isWebMode ? web.clearThumbnailCache() : tauri.clearThumbnailCache();
+}
+
+export function loadBookmarks(): Promise<Bookmark[]> {
+  return isWebMode ? web.loadBookmarks() : tauri.loadBookmarks();
+}
+
+export function saveBookmarks(bookmarks: Bookmark[]): Promise<void> {
+  return isWebMode ? web.saveBookmarks(bookmarks) : tauri.saveBookmarks(bookmarks);
 }

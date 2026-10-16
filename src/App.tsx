@@ -23,7 +23,7 @@ import {
   isInternalDrag,
   samePath,
 } from "./lib/dragdrop";
-import DirectoryTree from "./components/DirectoryTree";
+import BookmarksPanel from "./components/BookmarksPanel";
 import FileGrid from "./components/FileGrid";
 import Toolbar from "./components/Toolbar";
 import ViewerModal from "./components/ViewerModal";
@@ -190,15 +190,12 @@ export default function App() {
         onTileSize={setTileSize}
       />
       <div className="workspace">
-        {rootPath && (
-          <aside className="sidebar">
-            <DirectoryTree
-              rootPath={rootPath}
-              currentPath={listing?.path ?? ""}
-              onNavigate={(path) => void navigate(path)}
-            />
-          </aside>
-        )}
+        <aside className="sidebar">
+          <BookmarksPanel
+            currentPath={listing?.path ?? ""}
+            onNavigate={(path) => void navigate(path)}
+          />
+        </aside>
         <main className="content">
           {error && <div className="banner error">{error}</div>}
           {listing ? (

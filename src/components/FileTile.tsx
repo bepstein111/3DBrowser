@@ -5,6 +5,8 @@ import { getThumbnail, peekThumbnail } from "../lib/thumbnails";
 import { formatForExtension } from "../formats";
 import { formatBytes } from "../lib/format";
 import { INTERNAL_DRAG_TYPE, startEntryDrag } from "../lib/dragdrop";
+import { pathsEqual } from "../lib/paths";
+import { useBookmarks } from "../state/BookmarksContext";
 
 interface Props {
   entry: DirEntry;
@@ -16,8 +18,14 @@ export default function FileTile({ entry, onOpen }: Props) {
   const [thumb, setThumb] = useState<string | undefined>(() => peekThumbnail(entry));
   const [failed, setFailed] = useState(false);
   const format = formatForExtension(entry.extension);
+  const { bookmarks, toggleBookmark } = useBookmarks();
+  const bookmarked = bookmarks.some((bookmark) => pathsEqual(bookmark.path, entry.path));
 
   const handleDragStart = (event: DragEvent<HTMLButtonElement>) => {
+    if ((event.target as HTMLElement).closest("[data-star]")) {
+      event.preventDefault();
+      return;
+    }
     if (isWebMode) {
       // Browser mode: use native HTML5 drag and drop for in-app moves.
       event.dataTransfer.setData(INTERNAL_DRAG_TYPE, entry.path);
@@ -78,6 +86,21 @@ export default function FileTile({ entry, onOpen }: Props) {
         <span className="tile-art">
           <span className="folder-icon" aria-hidden>
             📁
+          </span>
+          <span
+            role="button"
+            tabIndex={-1}
+            aria-label={bookmarked ? "Remove bookmark" : "Bookmark folder"}
+            className={`tile-star${bookmarked ? " is-active" : ""}`}
+            data-star
+            onClick={(event) => {
+              event.stopPropagation();
+              event.preventDefault();
+              toggleBookmark(entry.path, entry.name);
+            }}
+            onPointerDown={(event) => event.stopPropagation()}
+          >
+            {bookmarked ? "★" : "☆"}
           </span>
         </span>
         <span className="tile-caption">
