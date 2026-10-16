@@ -33,10 +33,10 @@ npm run tauri build    # produce a release bundle
 
 ## Running in the browser (Docker)
 
-The `docker` setup serves the same UI in a normal browser and reads from a
-directory mounted into a container. The folder to expose is chosen with the
-`MODELS_DIR` environment variable; a small Node service (proxied by Caddy,
-which also serves the built frontend) provides the filesystem API.
+The same UI runs in a normal browser and reads from a directory mounted into a
+container. A single Node service serves both the built frontend and the
+filesystem API. The folder to expose is chosen with the `MODELS_DIR`
+environment variable.
 
 ```bash
 # uses ./sample by default
@@ -49,18 +49,40 @@ MODELS_DIR=C:/models  docker compose up --build        # Windows (compose v2)
 # then open http://localhost:8080 (override with HTTP_PORT)
 ```
 
-In browser mode there is no native drag-out (a webview cannot hand a drag to
-another app), but dragging a tile onto a folder still moves it via HTML5
-drag-and-drop. To run the frontend and backend locally without Docker:
+A prebuilt image is published to GitHub Container Registry on every push to
+`main` and on `v*` tags:
 
 ```bash
-node server/index.mjs          # ROOT=./sample by default, PORT=8787
+docker run --rm -p 8080:8080 -v /path/to/models:/models \
+  ghcr.io/bepstein111/3dbrowser:latest
+```
+
+`docker-compose.yml` mounts `${MODELS_DIR:-./sample}` at `/models` and sets
+`ROOT` to it. Point `MODELS_ROOT` at a subfolder to expose only part of the
+mount.
+
+### Putting Caddy in front (optional)
+
+The image has no reverse proxy; add one if you want TLS, caching or extra
+headers. `docker-compose.caddy.yml` runs Caddy in front of the app:
+
+```bash
+docker compose -f docker-compose.caddy.yml up --build
+# opens on http://localhost:8080, proxied through Caddy
+```
+
+Edit `docker/Caddyfile` (e.g. a real hostname for automatic HTTPS) as needed.
+
+### Local development without Docker
+
+```bash
+node server/index.mjs          # ROOT=./sample, PORT=8787; add STATIC_DIR=./dist to serve the build
 npm run dev                    # Vite proxies /api to the server
 ```
 
-`docker-compose.yml` mounts `${MODELS_DIR:-./sample}` at `/models` and sets the
-service `ROOT` to it. Point `MODELS_ROOT` at a subfolder if you want to expose
-only part of the mount.
+In browser mode there is no native drag-out (a webview cannot hand a drag to
+another app), but dragging a tile onto a folder still moves it via HTML5
+drag-and-drop.
 
 ## Adding a new format
 
@@ -109,8 +131,9 @@ existing caches.
 - `src/lib/api.ts` – picks the desktop (Tauri) or web (HTTP) backend at runtime.
 - `src/lib/dragdrop.ts` – native drag-out, drop-target hit-testing.
 - `src/state/BookmarksContext.tsx` – bookmark state, persisted per backend.
-- `server/index.mjs` – zero-dependency HTTP file API for browser mode.
-- `docker/` – Caddy config and the web/api Dockerfiles.
+- `server/index.mjs` – HTTP server that serves the built frontend and the filesystem API.
+- `docker/Dockerfile` – single image (frontend build + Node server); `docker/Caddyfile` for the optional proxy.
+- `.github/workflows/docker-publish.yml` – builds and publishes the image to GHCR.
 - `src/components/` – explorer UI (toolbar, bookmarks panel, grid, viewer modal).
 
 Drag and drop uses a single native drag gesture (via `@crabnebula/tauri-plugin-drag`).
