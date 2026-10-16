@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState, type DragEvent } from "react";
-import type { DirEntry } from "../lib/tauri";
+import type { DirEntry } from "../lib/api";
+import { isWebMode } from "../lib/api";
 import { getThumbnail, peekThumbnail } from "../lib/thumbnails";
 import { formatForExtension } from "../formats";
 import { formatBytes } from "../lib/format";
-import { startEntryDrag } from "../lib/dragdrop";
+import { INTERNAL_DRAG_TYPE, startEntryDrag } from "../lib/dragdrop";
 
 interface Props {
   entry: DirEntry;
@@ -17,6 +18,13 @@ export default function FileTile({ entry, onOpen }: Props) {
   const format = formatForExtension(entry.extension);
 
   const handleDragStart = (event: DragEvent<HTMLButtonElement>) => {
+    if (isWebMode) {
+      // Browser mode: use native HTML5 drag and drop for in-app moves.
+      event.dataTransfer.setData(INTERNAL_DRAG_TYPE, entry.path);
+      event.dataTransfer.setData("text/plain", entry.path);
+      event.dataTransfer.effectAllowed = "copyMove";
+      return;
+    }
     event.preventDefault();
     startEntryDrag(entry, thumb);
   };

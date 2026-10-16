@@ -1,4 +1,4 @@
-import type { DirEntry, DirListing } from "../lib/tauri";
+import type { DirEntry, DirListing } from "../lib/api";
 import { isModelFile } from "../formats";
 import FileTile from "./FileTile";
 

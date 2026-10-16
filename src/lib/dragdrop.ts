@@ -1,5 +1,8 @@
 import { startDrag } from "@crabnebula/tauri-plugin-drag";
-import type { DirEntry } from "./tauri";
+import type { DirEntry } from "./api";
+
+/** dataTransfer type used for in-app drags in browser (non-Tauri) mode. */
+export const INTERNAL_DRAG_TYPE = "application/x-3dbrowser-entry";
 
 /** Path of the entry currently being dragged from within the app, if any. */
 let internalDragPath: string | null = null;
@@ -82,18 +85,21 @@ export interface DropTarget {
   element: HTMLElement;
 }
 
+/** Resolves the drop target under CSS-pixel viewport coordinates. */
+export function dropTargetAtPoint(clientX: number, clientY: number): DropTarget | null {
+  const element = document.elementFromPoint(clientX, clientY) as HTMLElement | null;
+  const target = element?.closest<HTMLElement>("[data-drop-path]");
+  if (!target) return null;
+  const path = target.dataset.dropPath;
+  return path ? { path, element: target } : null;
+}
+
 /** Resolves the drop target under a physical cursor position (from Tauri). */
 export function dropTargetAt(
   position: { x: number; y: number },
   scale: number,
 ): DropTarget | null {
-  const x = position.x / scale;
-  const y = position.y / scale;
-  const element = document.elementFromPoint(x, y) as HTMLElement | null;
-  const target = element?.closest<HTMLElement>("[data-drop-path]");
-  if (!target) return null;
-  const path = target.dataset.dropPath;
-  return path ? { path, element: target } : null;
+  return dropTargetAtPoint(position.x / scale, position.y / scale);
 }
 
 let highlighted: HTMLElement | null = null;

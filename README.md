@@ -28,6 +28,37 @@ npm run tauri dev      # run the app
 npm run tauri build    # produce a release bundle
 ```
 
+## Running in the browser (Docker)
+
+The `docker` setup serves the same UI in a normal browser and reads from a
+directory mounted into a container. The folder to expose is chosen with the
+`MODELS_DIR` environment variable; a small Node service (proxied by Caddy,
+which also serves the built frontend) provides the filesystem API.
+
+```bash
+# uses ./sample by default
+docker compose up --build
+
+# expose a folder of your own
+MODELS_DIR=/path/to/models docker compose up --build   # Linux/macOS
+MODELS_DIR=C:/models  docker compose up --build        # Windows (compose v2)
+
+# then open http://localhost:8080 (override with HTTP_PORT)
+```
+
+In browser mode there is no native drag-out (a webview cannot hand a drag to
+another app), but dragging a tile onto a folder still moves it via HTML5
+drag-and-drop. To run the frontend and backend locally without Docker:
+
+```bash
+node server/index.mjs          # ROOT=./sample by default, PORT=8787
+npm run dev                    # Vite proxies /api to the server
+```
+
+`docker-compose.yml` mounts `${MODELS_DIR:-./sample}` at `/models` and sets the
+service `ROOT` to it. Point `MODELS_ROOT` at a subfolder if you want to expose
+only part of the mount.
+
 ## Adding a new format
 
 Formats live in `src/formats/` and are plugged into a registry. The rest of the
@@ -71,7 +102,10 @@ existing caches.
 - `src-tauri/src/thumbs.rs` – on-disk thumbnail cache.
 - `src/formats/` – format registry and loaders (the extension point).
 - `src/three/` – shared scene helpers, offscreen thumbnail renderer, viewer.
+- `src/lib/api.ts` – picks the desktop (Tauri) or web (HTTP) backend at runtime.
 - `src/lib/dragdrop.ts` – native drag-out, drop-target hit-testing.
+- `server/index.mjs` – zero-dependency HTTP file API for browser mode.
+- `docker/` – Caddy config and the web/api Dockerfiles.
 - `src/components/` – explorer UI (toolbar, tree, grid, viewer modal).
 
 Drag and drop uses a single native drag gesture (via `@crabnebula/tauri-plugin-drag`).

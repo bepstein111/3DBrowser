@@ -1,6 +1,6 @@
 import { formatForExtension } from "../formats";
 import { renderThumbnail, THUMBNAIL_VERSION } from "../three/thumbnail";
-import { readFile, readThumbnail, writeThumbnail, type DirEntry } from "./tauri";
+import { readFile, readThumbnail, writeThumbnail, type DirEntry } from "./api";
 
 const memory = new Map<string, string>();
 const inflight = new Map<string, Promise<string>>();

@@ -1,4 +1,5 @@
-import type { DirListing } from "../lib/tauri";
+import type { DirListing } from "../lib/api";
+import { isWebMode } from "../lib/api";
 
 interface Props {
   listing: DirListing | null;
@@ -28,9 +29,11 @@ export default function Toolbar({
   return (
     <header className="toolbar">
       <div className="toolbar-row">
-        <button type="button" className="btn" onClick={onOpenFolder}>
-          Open Folder
-        </button>
+        {!isWebMode && (
+          <button type="button" className="btn" onClick={onOpenFolder}>
+            Open Folder
+          </button>
+        )}
         <button
           type="button"
           className="btn"
