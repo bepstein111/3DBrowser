@@ -81,6 +81,10 @@ export function copyEntries(paths: string[], destDir: string): Promise<string[]>
   return invoke<string[]>("copy_entries", { paths, destDir });
 }
 
+export function createFolder(parent: string, name: string): Promise<string> {
+  return invoke<string>("create_folder", { parent, name });
+}
+
 export interface Bookmark {
   id: string;
   name: string;

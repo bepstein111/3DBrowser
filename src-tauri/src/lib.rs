@@ -15,6 +15,7 @@ pub fn run() {
             fs::home_dir,
             ops::move_entry,
             ops::copy_entries,
+            ops::create_folder,
             bookmarks::load_bookmarks,
             bookmarks::save_bookmarks,
             thumbs::read_thumbnail,

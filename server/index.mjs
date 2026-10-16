@@ -151,6 +151,23 @@ async function copyEntries(paths, destDir) {
   return created;
 }
 
+async function createFolder(parent, name) {
+  const parentReal = toReal(parent);
+  const parentStat = await fsp.stat(parentReal).catch(() => null);
+  if (!parentStat || !parentStat.isDirectory()) {
+    throw new HttpError(400, "Not a folder");
+  }
+
+  const base = (name || "").trim() || "New Folder";
+  if (base.includes("/") || base.includes("\\")) {
+    throw new HttpError(400, "Folder name cannot contain path separators");
+  }
+
+  const destination = uniqueDestination(parentReal, base);
+  await fsp.mkdir(destination);
+  return toVirtual(destination);
+}
+
 function readJsonBody(req) {
   return new Promise((resolve, reject) => {
     const chunks = [];
@@ -223,6 +240,12 @@ async function handle(req, res) {
     const body = await readJsonBody(req);
     const result = await copyEntries(body.paths || [], String(body.destDir));
     return sendJson(res, 200, { paths: result });
+  }
+
+  if (route === "/api/new-folder" && req.method === "POST") {
+    const body = await readJsonBody(req);
+    const result = await createFolder(String(body.parent), String(body.name ?? ""));
+    return sendJson(res, 200, { path: result });
   }
 
   throw new HttpError(404, "Not found");

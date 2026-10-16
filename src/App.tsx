@@ -5,6 +5,7 @@ import "./App.css";
 import {
   clearThumbnailCache,
   copyEntries,
+  createFolder,
   homeDir,
   isWebMode,
   listDir,
@@ -24,9 +25,16 @@ import {
   samePath,
 } from "./lib/dragdrop";
 import BookmarksPanel from "./components/BookmarksPanel";
+import ContextMenu from "./components/ContextMenu";
 import FileGrid from "./components/FileGrid";
+import PromptDialog from "./components/PromptDialog";
 import Toolbar from "./components/Toolbar";
 import ViewerModal from "./components/ViewerModal";
+
+interface Clipboard {
+  mode: "cut" | "copy";
+  paths: string[];
+}
 
 export default function App() {
   const [rootPath, setRootPath] = useState<string | null>(null);
@@ -36,6 +44,11 @@ export default function App() {
   const [showAll, setShowAll] = useState(false);
   const [tileSize, setTileSize] = useState(168);
   const [openEntry, setOpenEntry] = useState<DirEntry | null>(null);
+  const [clipboard, setClipboard] = useState<Clipboard | null>(null);
+  const [menu, setMenu] = useState<{ x: number; y: number; entry: DirEntry | null } | null>(
+    null,
+  );
+  const [newFolderParent, setNewFolderParent] = useState<string | null>(null);
 
   const listingPathRef = useRef<string | null>(null);
   useEffect(() => {
@@ -176,6 +189,58 @@ export default function App() {
 
   const closeViewer = useCallback(() => setOpenEntry(null), []);
 
+  const openContextMenu = useCallback((entry: DirEntry | null, x: number, y: number) => {
+    setMenu({ x, y, entry });
+  }, []);
+
+  const contextFolder = useCallback((entry: DirEntry | null): string | null => {
+    if (entry) return entry.isDir ? entry.path : listingPathRef.current;
+    return listingPathRef.current;
+  }, []);
+
+  const isCut = useCallback(
+    (entry: DirEntry) =>
+      clipboard?.mode === "cut" && clipboard.paths.some((path) => samePath(path, entry.path)),
+    [clipboard],
+  );
+
+  const pasteClipboard = useCallback(
+    async (entry: DirEntry | null) => {
+      const target = contextFolder(entry);
+      if (!clipboard || !target) return;
+      try {
+        if (clipboard.mode === "cut") {
+          for (const path of clipboard.paths) {
+            if (samePath(path, target)) continue;
+            await moveEntry(path, target);
+          }
+          setClipboard(null);
+        } else {
+          await copyEntries(clipboard.paths, target);
+        }
+        if (listingPathRef.current) await navigate(listingPathRef.current);
+      } catch (cause) {
+        setError(cause instanceof Error ? cause.message : String(cause));
+      }
+    },
+    [clipboard, contextFolder, navigate],
+  );
+
+  const confirmNewFolder = useCallback(
+    async (name: string) => {
+      const parent = newFolderParent;
+      setNewFolderParent(null);
+      if (!parent) return;
+      try {
+        await createFolder(parent, name);
+        if (listingPathRef.current) await navigate(listingPathRef.current);
+      } catch (cause) {
+        setError(cause instanceof Error ? cause.message : String(cause));
+      }
+    },
+    [newFolderParent, navigate],
+  );
+
   return (
     <div className="app">
       <Toolbar
@@ -205,6 +270,8 @@ export default function App() {
               tileSize={tileSize}
               onOpenFolder={openFolderEntry}
               onOpenModel={setOpenEntry}
+              onContextMenu={openContextMenu}
+              isCut={isCut}
             />
           ) : (
             !error && <div className="empty-state">Loading…</div>
@@ -212,6 +279,52 @@ export default function App() {
         </main>
       </div>
       {openEntry && <ViewerModal entry={openEntry} onClose={closeViewer} />}
+      {menu && (
+        <ContextMenu
+          x={menu.x}
+          y={menu.y}
+          onClose={() => setMenu(null)}
+          items={[
+            {
+              label: "Cut",
+              disabled: !menu.entry,
+              onSelect: () => {
+                if (menu.entry) setClipboard({ mode: "cut", paths: [menu.entry.path] });
+              },
+            },
+            {
+              label: "Copy",
+              disabled: !menu.entry,
+              onSelect: () => {
+                if (menu.entry) setClipboard({ mode: "copy", paths: [menu.entry.path] });
+              },
+            },
+            {
+              label: "Paste",
+              disabled: !clipboard,
+              onSelect: () => void pasteClipboard(menu.entry),
+            },
+            {
+              label: "New Folder",
+              separatorBefore: true,
+              onSelect: () => {
+                const parent = contextFolder(menu.entry);
+                if (parent) setNewFolderParent(parent);
+              },
+            },
+          ]}
+        />
+      )}
+      {newFolderParent && (
+        <PromptDialog
+          title="New Folder"
+          label="Folder name"
+          initialValue="New Folder"
+          confirmLabel="Create"
+          onConfirm={confirmNewFolder}
+          onCancel={() => setNewFolderParent(null)}
+        />
+      )}
     </div>
   );
 }

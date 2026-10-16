@@ -103,6 +103,25 @@ pub fn move_entry(source: String, dest_dir: String) -> Result<String, String> {
     }
 }
 
+/// Creates a new folder inside `parent`, returning the created path.
+#[tauri::command]
+pub fn create_folder(parent: String, name: String) -> Result<String, String> {
+    let parent = PathBuf::from(&parent);
+    if !parent.is_dir() {
+        return Err(format!("Not a folder: {}", parent.display()));
+    }
+
+    let trimmed = name.trim();
+    let base = if trimmed.is_empty() { "New Folder" } else { trimmed };
+    if base.contains('/') || base.contains('\\') {
+        return Err("Folder name cannot contain path separators".to_string());
+    }
+
+    let destination = unique_destination(&parent, std::ffi::OsStr::new(base));
+    std::fs::create_dir(&destination).map_err(|e| io_err(&destination, e))?;
+    Ok(destination.to_string_lossy().to_string())
+}
+
 /// Copies files or folders into `dest_dir`, returning the created paths.
 #[tauri::command]
 pub fn copy_entries(paths: Vec<String>, dest_dir: String) -> Result<Vec<String>, String> {
@@ -126,7 +145,6 @@ pub fn copy_entries(paths: Vec<String>, dest_dir: String) -> Result<Vec<String>,
     }
     Ok(created)
 }
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -213,6 +231,19 @@ mod tests {
         assert_eq!(created.len(), 1);
         assert!(src.exists(), "source is kept after copy");
         assert!(dest.join("thing").join("b.stl").exists());
+
+        fs::remove_dir_all(&root).ok();
+    }
+
+    #[test]
+    fn create_folder_resolves_conflict() {
+        let root = temp_dir("new-folder");
+        let created = create_folder(root.to_string_lossy().into(), "New Folder".into()).unwrap();
+        assert_eq!(PathBuf::from(&created), root.join("New Folder"));
+
+        let again = create_folder(root.to_string_lossy().into(), "New Folder".into()).unwrap();
+        assert_eq!(PathBuf::from(&again), root.join("New Folder (2)"));
+        assert!(PathBuf::from(&again).is_dir());
 
         fs::remove_dir_all(&root).ok();
     }

@@ -11,6 +11,8 @@ Built with **Tauri 2** (Rust backend) + **React** + **three.js**.
 
 ## Features
 
+- Right-click a tile or empty space for Cut / Copy / Paste and New Folder
+  (cut items are dimmed until pasted).
 - Bookmark sidebar: save folders, rename them, drag to reorder, and click to
   jump straight there. Bookmarked folders show a filled star.
 - Large thumbnail grid; thumbnails are rendered in the background and cached to
@@ -99,7 +101,7 @@ existing caches.
 ## Architecture
 
 - `src-tauri/src/fs.rs` – filesystem listing and raw file reads.
-- `src-tauri/src/ops.rs` – move/copy operations backing drag and drop.
+- `src-tauri/src/ops.rs` – move/copy/create-folder operations backing the context menu and drag and drop.
 - `src-tauri/src/bookmarks.rs` – bookmark persistence (JSON in the app data dir).
 - `src-tauri/src/thumbs.rs` – on-disk thumbnail cache.
 - `src/formats/` – format registry and loaders (the extension point).
