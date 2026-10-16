@@ -72,3 +72,11 @@ export function writeThumbnail(
 export function clearThumbnailCache(): Promise<void> {
   return invoke<void>("clear_thumbnail_cache");
 }
+
+export function moveEntry(source: string, destDir: string): Promise<string> {
+  return invoke<string>("move_entry", { source, destDir });
+}
+
+export function copyEntries(paths: string[], destDir: string): Promise<string[]> {
+  return invoke<string[]>("copy_entries", { paths, destDir });
+}

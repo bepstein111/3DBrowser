@@ -23,7 +23,7 @@ export default function FileGrid({
 
   if (visible.length === 0) {
     return (
-      <div className="empty-state">
+      <div className="empty-state" data-drop-path={listing.path}>
         <p>No 3D models here.</p>
         <p className="empty-hint">Enable “Show all files” to see everything in this folder.</p>
       </div>
@@ -33,6 +33,7 @@ export default function FileGrid({
   return (
     <div
       className="file-grid"
+      data-drop-path={listing.path}
       style={{ gridTemplateColumns: `repeat(auto-fill, minmax(${tileSize}px, 1fr))` }}
     >
       {visible.map((entry) => (

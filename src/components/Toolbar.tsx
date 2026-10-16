@@ -53,6 +53,7 @@ export default function Toolbar({
                 className="crumb-btn"
                 onClick={() => onNavigate(segment.path)}
                 title={segment.path}
+                data-drop-path={segment.path}
               >
                 {segment.name}
               </button>

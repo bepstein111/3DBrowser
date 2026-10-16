@@ -15,6 +15,9 @@ Built with **Tauri 2** (Rust backend) + **React** + **three.js**.
 - Large thumbnail grid; thumbnails are rendered in the background and cached to
   disk (keyed by path + modified time + size), so they appear instantly next time.
 - Full-size viewer with orbit controls, wireframe toggle and a reset view.
+- Drag a tile onto a folder (or tree node / breadcrumb) to move it, or drag it
+  out of the window into a slicer or any other application. Files dropped onto
+  the app from Explorer/Finder are copied into the folder being viewed.
 - Supported formats out of the box: **STL, OBJ, 3MF, STEP/STP, IGES/IGS**.
 
 ## Development
@@ -64,7 +67,14 @@ existing caches.
 ## Architecture
 
 - `src-tauri/src/fs.rs` – filesystem listing and raw file reads.
+- `src-tauri/src/ops.rs` – move/copy operations backing drag and drop.
 - `src-tauri/src/thumbs.rs` – on-disk thumbnail cache.
 - `src/formats/` – format registry and loaders (the extension point).
 - `src/three/` – shared scene helpers, offscreen thumbnail renderer, viewer.
+- `src/lib/dragdrop.ts` – native drag-out, drop-target hit-testing.
 - `src/components/` – explorer UI (toolbar, tree, grid, viewer modal).
+
+Drag and drop uses a single native drag gesture (via `@crabnebula/tauri-plugin-drag`).
+Dropping over the window is handled by Tauri's drag-drop event, whose cursor
+position is hit-tested against elements carrying a `data-drop-path` attribute;
+drops outside the window are handed straight to the OS.
