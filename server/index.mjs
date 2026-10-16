@@ -5,6 +5,7 @@ import path from "node:path";
 
 const ROOT = path.resolve(process.env.ROOT || "/models");
 const PORT = Number(process.env.PORT || 8787);
+const STATIC_DIR = process.env.STATIC_DIR ? path.resolve(process.env.STATIC_DIR) : null;
 const MODEL_EXTENSIONS = new Set([
   "stl",
   "obj",
@@ -14,6 +15,25 @@ const MODEL_EXTENSIONS = new Set([
   "igs",
   "iges",
 ]);
+
+const MIME_TYPES = {
+  ".html": "text/html; charset=utf-8",
+  ".js": "text/javascript; charset=utf-8",
+  ".mjs": "text/javascript; charset=utf-8",
+  ".css": "text/css; charset=utf-8",
+  ".json": "application/json; charset=utf-8",
+  ".wasm": "application/wasm",
+  ".svg": "image/svg+xml",
+  ".png": "image/png",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".gif": "image/gif",
+  ".ico": "image/x-icon",
+  ".woff": "font/woff",
+  ".woff2": "font/woff2",
+  ".txt": "text/plain; charset=utf-8",
+  ".map": "application/json; charset=utf-8",
+};
 
 class HttpError extends Error {
   constructor(status, message) {
@@ -264,7 +284,42 @@ async function handle(req, res) {
     return sendJson(res, 200, { ok: true });
   }
 
+  if (!route.startsWith("/api/")) {
+    const served = await serveStatic(res, url);
+    if (served) return undefined;
+  }
+
   throw new HttpError(404, "Not found");
+}
+
+/** Serves the built frontend (when STATIC_DIR is set) with SPA fallback. */
+async function serveStatic(res, url) {
+  if (!STATIC_DIR) return false;
+
+  let relative = decodeURIComponent(url.pathname);
+  if (relative === "/") relative = "/index.html";
+
+  let filePath = path.resolve(STATIC_DIR, "." + relative);
+  if (filePath !== STATIC_DIR && !filePath.startsWith(STATIC_DIR + path.sep)) {
+    return false;
+  }
+
+  let stat = await fsp.stat(filePath).catch(() => null);
+  if (stat && stat.isDirectory()) {
+    filePath = path.join(filePath, "index.html");
+    stat = await fsp.stat(filePath).catch(() => null);
+  }
+
+  if (!stat || !stat.isFile()) {
+    filePath = path.join(STATIC_DIR, "index.html");
+    stat = await fsp.stat(filePath).catch(() => null);
+    if (!stat || !stat.isFile()) return false;
+  }
+
+  const contentType = MIME_TYPES[path.extname(filePath).toLowerCase()] || "application/octet-stream";
+  res.writeHead(200, { "content-type": contentType, "content-length": stat.size });
+  fs.createReadStream(filePath).pipe(res);
+  return true;
 }
 
 const server = http.createServer((req, res) => {
@@ -280,8 +335,9 @@ const server = http.createServer((req, res) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`3D Browser API listening on :${PORT}`);
-  console.log(`Serving root: ${ROOT}`);
+  console.log(`3D Browser listening on :${PORT}`);
+  console.log(`Serving models from: ${ROOT}`);
+  if (STATIC_DIR) console.log(`Serving frontend from: ${STATIC_DIR}`);
   if (!fs.existsSync(ROOT)) {
     console.warn(`Warning: root directory does not exist: ${ROOT}`);
   }

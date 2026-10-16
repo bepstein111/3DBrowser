@@ -1,0 +1,26 @@
+# Optional: run Caddy in front of the app (TLS, caching, extra headers).
+#   docker compose -f docker-compose.caddy.yml up --build
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    image: ghcr.io/bepstein111/3dbrowser:latest
+    environment:
+      ROOT: ${MODELS_ROOT:-/models}
+      PORT: "8080"
+    volumes:
+      - type: bind
+        source: ${MODELS_DIR:-./sample}
+        target: /models
+    restart: unless-stopped
+
+  caddy:
+    image: caddy:2-alpine
+    ports:
+      - "${HTTP_PORT:-8080}:80"
+    volumes:
+      - ./docker/Caddyfile:/etc/caddy/Caddyfile:ro
+    depends_on:
+      - app
+    restart: unless-stopped
