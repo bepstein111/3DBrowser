@@ -36,6 +36,10 @@ export function copyEntries(paths: string[], destDir: string): Promise<string[]>
   return isWebMode ? web.copyEntries(paths, destDir) : tauri.copyEntries(paths, destDir);
 }
 
+export function createFolder(parent: string, name: string): Promise<string> {
+  return isWebMode ? web.createFolder(parent, name) : tauri.createFolder(parent, name);
+}
+
 export function readThumbnail(entry: DirEntry, version: number): Promise<string | null> {
   return isWebMode ? web.readThumbnail(entry, version) : tauri.readThumbnail(entry, version);
 }

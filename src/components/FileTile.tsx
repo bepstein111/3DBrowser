@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type DragEvent } from "react";
+import { useEffect, useRef, useState, type DragEvent, type MouseEvent } from "react";
 import type { DirEntry } from "../lib/api";
 import { isWebMode } from "../lib/api";
 import { getThumbnail, peekThumbnail } from "../lib/thumbnails";
@@ -11,15 +11,23 @@ import { useBookmarks } from "../state/BookmarksContext";
 interface Props {
   entry: DirEntry;
   onOpen: (entry: DirEntry) => void;
+  onContextMenu: (entry: DirEntry, x: number, y: number) => void;
+  isCut: boolean;
 }
 
-export default function FileTile({ entry, onOpen }: Props) {
+export default function FileTile({ entry, onOpen, onContextMenu, isCut }: Props) {
   const ref = useRef<HTMLButtonElement>(null);
   const [thumb, setThumb] = useState<string | undefined>(() => peekThumbnail(entry));
   const [failed, setFailed] = useState(false);
   const format = formatForExtension(entry.extension);
   const { bookmarks, toggleBookmark } = useBookmarks();
   const bookmarked = bookmarks.some((bookmark) => pathsEqual(bookmark.path, entry.path));
+
+  const handleContextMenu = (event: MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    onContextMenu(entry, event.clientX, event.clientY);
+  };
 
   const handleDragStart = (event: DragEvent<HTMLButtonElement>) => {
     if ((event.target as HTMLElement).closest("[data-star]")) {
@@ -76,8 +84,9 @@ export default function FileTile({ entry, onOpen }: Props) {
       <button
         ref={ref}
         type="button"
-        className="tile folder-tile"
+        className={`tile folder-tile${isCut ? " cut" : ""}`}
         onClick={() => onOpen(entry)}
+        onContextMenu={handleContextMenu}
         title={entry.name}
         draggable
         onDragStart={handleDragStart}
@@ -114,8 +123,9 @@ export default function FileTile({ entry, onOpen }: Props) {
     <button
       ref={ref}
       type="button"
-      className="tile model-tile"
+      className={`tile model-tile${isCut ? " cut" : ""}`}
       onClick={() => onOpen(entry)}
+      onContextMenu={handleContextMenu}
       title={entry.name}
       draggable
       onDragStart={handleDragStart}

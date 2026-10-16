@@ -53,6 +53,15 @@ export async function copyEntries(paths: string[], destDir: string): Promise<str
   return body.paths;
 }
 
+export async function createFolder(parent: string, name: string): Promise<string> {
+  const body = await requestJson<{ path: string }>("/api/new-folder", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ parent, name }),
+  });
+  return body.path;
+}
+
 export function readThumbnail(
   _entry: DirEntry,
   _version: number,
