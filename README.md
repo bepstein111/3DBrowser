@@ -11,8 +11,8 @@ Built with **Tauri 2** (Rust backend) + **React** + **three.js**.
 
 ## Features
 
-- Right-click a tile or empty space for Cut / Copy / Paste and New Folder
-  (cut items are dimmed until pasted).
+- Right-click a tile or empty space for Cut / Copy / Paste, New Folder and
+  Delete (cut items are dimmed until pasted; delete asks for confirmation).
 - Bookmark sidebar: save folders, rename them, drag to reorder, and click to
   jump straight there. Bookmarked folders show a filled star.
 - Large thumbnail grid; thumbnails are rendered in the background and cached to

@@ -85,6 +85,10 @@ export function createFolder(parent: string, name: string): Promise<string> {
   return invoke<string>("create_folder", { parent, name });
 }
 
+export function deleteEntry(path: string): Promise<void> {
+  return invoke<void>("delete_entry", { path });
+}
+
 export interface Bookmark {
   id: string;
   name: string;

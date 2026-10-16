@@ -40,6 +40,10 @@ export function createFolder(parent: string, name: string): Promise<string> {
   return isWebMode ? web.createFolder(parent, name) : tauri.createFolder(parent, name);
 }
 
+export function deleteEntry(path: string): Promise<void> {
+  return isWebMode ? web.deleteEntry(path) : tauri.deleteEntry(path);
+}
+
 export function readThumbnail(entry: DirEntry, version: number): Promise<string | null> {
   return isWebMode ? web.readThumbnail(entry, version) : tauri.readThumbnail(entry, version);
 }

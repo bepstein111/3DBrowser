@@ -692,3 +692,20 @@ button {
   background: #6ba0ff;
 }
 
+.btn.danger {
+  background: #c0392b;
+  border-color: #c0392b;
+  color: #fff;
+  font-weight: 600;
+}
+
+.btn.danger:hover:not(:disabled) {
+  background: #d64534;
+}
+
+.prompt-message {
+  margin: 0;
+  color: var(--text-dim);
+  line-height: 1.5;
+}
+

@@ -6,6 +6,7 @@ import {
   clearThumbnailCache,
   copyEntries,
   createFolder,
+  deleteEntry,
   homeDir,
   isWebMode,
   listDir,
@@ -25,6 +26,7 @@ import {
   samePath,
 } from "./lib/dragdrop";
 import BookmarksPanel from "./components/BookmarksPanel";
+import ConfirmDialog from "./components/ConfirmDialog";
 import ContextMenu from "./components/ContextMenu";
 import FileGrid from "./components/FileGrid";
 import PromptDialog from "./components/PromptDialog";
@@ -49,6 +51,7 @@ export default function App() {
     null,
   );
   const [newFolderParent, setNewFolderParent] = useState<string | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<DirEntry | null>(null);
 
   const listingPathRef = useRef<string | null>(null);
   useEffect(() => {
@@ -241,6 +244,18 @@ export default function App() {
     [newFolderParent, navigate],
   );
 
+  const confirmDelete = useCallback(async () => {
+    const target = pendingDelete;
+    setPendingDelete(null);
+    if (!target) return;
+    try {
+      await deleteEntry(target.path);
+      if (listingPathRef.current) await navigate(listingPathRef.current);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : String(cause));
+    }
+  }, [pendingDelete, navigate]);
+
   return (
     <div className="app">
       <Toolbar
@@ -312,6 +327,13 @@ export default function App() {
                 if (parent) setNewFolderParent(parent);
               },
             },
+            {
+              label: "Delete",
+              disabled: !menu.entry,
+              onSelect: () => {
+                if (menu.entry) setPendingDelete(menu.entry);
+              },
+            },
           ]}
         />
       )}
@@ -323,6 +345,20 @@ export default function App() {
           confirmLabel="Create"
           onConfirm={confirmNewFolder}
           onCancel={() => setNewFolderParent(null)}
+        />
+      )}
+      {pendingDelete && (
+        <ConfirmDialog
+          title="Delete"
+          danger
+          confirmLabel="Delete"
+          message={
+            pendingDelete.isDir
+              ? `Delete the folder "${pendingDelete.name}" and everything in it? This cannot be undone.`
+              : `Delete "${pendingDelete.name}"? This cannot be undone.`
+          }
+          onConfirm={confirmDelete}
+          onCancel={() => setPendingDelete(null)}
         />
       )}
     </div>
