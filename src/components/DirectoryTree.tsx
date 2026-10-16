@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { listDir, type DirEntry } from "../lib/tauri";
+import { listDir, type DirEntry } from "../lib/api";
 import { baseName } from "../lib/format";
 
 interface Props {

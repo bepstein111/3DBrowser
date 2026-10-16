@@ -6,17 +6,20 @@ import {
   clearThumbnailCache,
   copyEntries,
   homeDir,
+  isWebMode,
   listDir,
   moveEntry,
   pickFolder,
   type DirEntry,
   type DirListing,
-} from "./lib/tauri";
+} from "./lib/api";
 import { invalidateAllThumbnails } from "./lib/thumbnails";
 import {
   clearDropHighlight,
   dropTargetAt,
+  dropTargetAtPoint,
   highlightDropTarget,
+  INTERNAL_DRAG_TYPE,
   isInternalDrag,
   samePath,
 } from "./lib/dragdrop";
@@ -53,9 +56,9 @@ export default function App() {
   }, []);
 
   const handleDrop = useCallback(
-    async (paths: string[], destDir: string) => {
+    async (paths: string[], destDir: string, internal: boolean) => {
       try {
-        if (paths.length === 1 && isInternalDrag(paths[0])) {
+        if (internal && paths.length === 1) {
           if (samePath(paths[0], destDir)) return;
           await moveEntry(paths[0], destDir);
         } else {
@@ -72,14 +75,38 @@ export default function App() {
   );
 
   useEffect(() => {
+    if (isWebMode) {
+      const onDragOver = (event: globalThis.DragEvent) => {
+        event.preventDefault();
+        if (Array.from(event.dataTransfer?.types ?? []).includes(INTERNAL_DRAG_TYPE)) {
+          if (event.dataTransfer) event.dataTransfer.dropEffect = "move";
+          const target = dropTargetAtPoint(event.clientX, event.clientY);
+          highlightDropTarget(target?.element ?? null);
+        }
+      };
+      const onDrop = (event: globalThis.DragEvent) => {
+        event.preventDefault();
+        clearDropHighlight();
+        const path = event.dataTransfer?.getData(INTERNAL_DRAG_TYPE);
+        if (!path) return;
+        const target = dropTargetAtPoint(event.clientX, event.clientY);
+        const destDir = target?.path ?? listingPathRef.current;
+        if (destDir) void handleDrop([path], destDir, true);
+      };
+      const onDragEnd = () => clearDropHighlight();
+
+      window.addEventListener("dragover", onDragOver);
+      window.addEventListener("drop", onDrop);
+      window.addEventListener("dragend", onDragEnd);
+      return () => {
+        window.removeEventListener("dragover", onDragOver);
+        window.removeEventListener("drop", onDrop);
+        window.removeEventListener("dragend", onDragEnd);
+      };
+    }
+
     let unlisten: (() => void) | undefined;
     let disposed = false;
-
-    const onDomDrop = (event: globalThis.DragEvent) => {
-      event.preventDefault();
-    };
-    window.addEventListener("dragover", onDomDrop);
-    window.addEventListener("drop", onDomDrop);
 
     getCurrentWebviewWindow()
       .onDragDropEvent((event) => {
@@ -95,7 +122,8 @@ export default function App() {
           clearDropHighlight();
           const target = dropTargetAt(payload.position, scale);
           const destDir = target?.path ?? listingPathRef.current;
-          if (destDir) void handleDrop(payload.paths, destDir);
+          const internal = payload.paths.length === 1 && isInternalDrag(payload.paths[0]);
+          if (destDir) void handleDrop(payload.paths, destDir, internal);
         }
       })
       .then((fn) => {
@@ -107,8 +135,6 @@ export default function App() {
     return () => {
       disposed = true;
       unlisten?.();
-      window.removeEventListener("dragover", onDomDrop);
-      window.removeEventListener("drop", onDomDrop);
     };
   }, [handleDrop]);
 

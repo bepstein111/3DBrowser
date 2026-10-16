@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import type { DirEntry } from "../lib/tauri";
-import { readFile } from "../lib/tauri";
+import type { DirEntry } from "../lib/api";
+import { readFile } from "../lib/api";
 import { formatForExtension } from "../formats";
 import { ModelViewer, type ViewerStats } from "../three/viewer";
 import { disposeObject } from "../three/material";
