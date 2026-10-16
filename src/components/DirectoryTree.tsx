@@ -72,6 +72,7 @@ function TreeItem({
       <div
         className={`tree-row${active ? " active" : ""}`}
         style={{ paddingLeft: 6 + depth * 14 }}
+        data-drop-path={path}
       >
         <button
           type="button"

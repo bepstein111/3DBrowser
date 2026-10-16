@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type DragEvent } from "react";
 import type { DirEntry } from "../lib/tauri";
 import { getThumbnail, peekThumbnail } from "../lib/thumbnails";
 import { formatForExtension } from "../formats";
 import { formatBytes } from "../lib/format";
+import { startEntryDrag } from "../lib/dragdrop";
 
 interface Props {
   entry: DirEntry;
@@ -14,6 +15,11 @@ export default function FileTile({ entry, onOpen }: Props) {
   const [thumb, setThumb] = useState<string | undefined>(() => peekThumbnail(entry));
   const [failed, setFailed] = useState(false);
   const format = formatForExtension(entry.extension);
+
+  const handleDragStart = (event: DragEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    startEntryDrag(entry, thumb);
+  };
 
   useEffect(() => {
     setThumb(peekThumbnail(entry));
@@ -57,6 +63,9 @@ export default function FileTile({ entry, onOpen }: Props) {
         className="tile folder-tile"
         onClick={() => onOpen(entry)}
         title={entry.name}
+        draggable
+        onDragStart={handleDragStart}
+        data-drop-path={entry.path}
       >
         <span className="tile-art">
           <span className="folder-icon" aria-hidden>
@@ -77,6 +86,8 @@ export default function FileTile({ entry, onOpen }: Props) {
       className="tile model-tile"
       onClick={() => onOpen(entry)}
       title={entry.name}
+      draggable
+      onDragStart={handleDragStart}
     >
       <span className="tile-art">
         {thumb ? (
