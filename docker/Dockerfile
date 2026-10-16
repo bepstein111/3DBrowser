@@ -19,7 +19,7 @@ COPY --from=build /app/dist ./dist
 
 ENV ROOT=/models
 ENV STATIC_DIR=/app/dist
-ENV PORT=8080
-EXPOSE 8080
+ENV APP_PORT=8080
+EXPOSE $APP_PORT
 
 CMD ["node", "server/index.mjs"]

@@ -5,9 +5,10 @@ services:
       dockerfile: docker/Dockerfile
     image: ghcr.io/bepstein111/3dbrowser:latest
     environment:
-      # Directory inside the container to expose to the browser.
-      ROOT: ${MODELS_ROOT:-/models}
-      PORT: "8080"
+      APP_PORT: "8080"
+    #or use the .env.example file to set environment variables (rename it to .env)
+    #env_file:
+    #  - .env
     volumes:
       # Mount a host folder into the container. Override MODELS_DIR, e.g.
       #   MODELS_DIR=C:/models docker compose up --build
@@ -15,5 +16,5 @@ services:
         source: ${MODELS_DIR:-./sample}
         target: /models
     ports:
-      - "${HTTP_PORT:-8080}:8080"
+      - "${HTTP_PORT:-8181}:8080"
     restart: unless-stopped
