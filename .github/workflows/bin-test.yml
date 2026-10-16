@@ -1,4 +1,4 @@
-name: 'test-on-pr'
+name: 'Compilation Test (Tauri)'
 
 on: [pull_request]
 
